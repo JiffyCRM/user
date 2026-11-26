@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "github.com/JiffyCRM/user/api/user/v1;userv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// UserService owns user profiles (internal_id + name), the organizations
+// users belong to, and the per-user list of role assignments (user_member).
+//
+// The only permanent user identifier is the opaque internal_id (UUID)
+// produced by identity-link. This service never stores or returns plaintext
+// email or other PII beyond the profile name.
+//
+// The current user is supplied through the "x-user-id" gRPC metadata key.
+service UserService {
+  // Create or update a user profile. internal_id must match the caller.
+  rpc UpsertUser(UpsertUserRequest) returns (User);
+
+  // Lookup a user by internal_id.
+  rpc GetUser(GetUserRequest) returns (User);
+
+  // List every user profile in an organization.
+  rpc ListUsersByOrganization(ListUsersByOrganizationRequest) returns (ListUsersResponse);
+
+  // List the role assignments (user_member rows) for a user.
+  rpc ListUserMembers(ListUserMembersRequest) returns (ListUserMembersResponse);
+
+  // Add a role assignment (user_member row) for a user. internal_id must match
+  // the caller unless the caller is acting on their own membership.
+  rpc CreateUserMember(CreateUserMemberRequest) returns (UserMember);
+
+  // Remove a single role assignment from a user.
+  rpc DeleteUserMember(DeleteUserMemberRequest) returns (google.protobuf.Empty);
+}
+
+message Organization {
+  string organization_id = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message User {
+  string internal_id = 1;
+  string name = 2;
+  string organization_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message UserMember {
+  string internal_id = 1;
+  string role_id = 2;
+  google.protobuf.Timestamp assigned_at = 3;
+}
+
+message UpsertUserRequest {
+  string internal_id = 1;
+  string name = 2;
+  string organization_id = 3;
+}
+
+message GetUserRequest {
+  string internal_id = 1;
+}
+
+message ListUsersByOrganizationRequest {
+  string organization_id = 1;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
+message ListUserMembersRequest {
+  string internal_id = 1;
+}
+
+message ListUserMembersResponse {
+  repeated UserMember user_members = 1;
+}
+
+message DeleteUserMemberRequest {
+  string internal_id = 1;
+  string role_id = 2;
+}
+
+message CreateUserMemberRequest {
+  string internal_id = 1;
+  string role_id = 2;
+}

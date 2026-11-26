@@ -1,0 +1,9 @@
+.git
+.gitignore
+bin/
+*.test
+coverage.out
+docs/
+README.md
+AGENTS.md
+docker-compose.yml
